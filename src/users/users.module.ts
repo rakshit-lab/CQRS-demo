@@ -8,14 +8,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Users } from './entities/user.entity';
 import { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
+import { UserCreatedHandler } from './events/handlers/user-created.handler';
+import { UserFetchedHandler } from './events/handlers/user-fetched.handler';
+import { CacheModule } from '@nestjs/cache-manager';
 
 export const CommandHandlers = [CreateUserHandler];
 export const QueryHandlers = [GetUserHandler,GetAllUserHandler];
 
 @Module({
-  imports: [CqrsModule, TypeOrmModule.forFeature([Users])
+  imports: [CqrsModule,
+     CacheModule.register({
+      ttl: 5, // default 5 seconds
+      max: 100, // store up to 100 items
+    }), TypeOrmModule.forFeature([Users])
 ],
   controllers: [UsersController],
-  providers: [...CommandHandlers, ...QueryHandlers,UsersRepository,UsersService]
+  providers: [...CommandHandlers, ...QueryHandlers, UsersRepository, UsersService, UserCreatedHandler, UserFetchedHandler]
 })  
 export class UsersModule {}
